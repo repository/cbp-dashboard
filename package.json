@@ -1,0 +1,49 @@
+{
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "build": "npm run build:css && remix build",
+    "build:css": "npx unocss \"app/**/*.{ts,tsx}\" -o ./app/styles/uno.css",
+    "deploy": "wrangler publish",
+    "dev:remix": "remix watch",
+    "dev:miniflare": "cross-env NODE_ENV=development miniflare ./build/index.js --watch",
+    "dev:css": "unocss \"app/**/*.{ts,tsx}\" -o ./app/styles/uno.css --watch",
+    "dev": "remix build && run-p \"dev:*\"",
+    "start": "cross-env NODE_ENV=production miniflare ./build/index.js",
+    "format": "prettier --write \"app/**/*.{ts,tsx}\"",
+    "lint": "eslint \"app/**/*.{ts,tsx}\" --fix"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@remix-run/cloudflare": "^1.7.4",
+    "@remix-run/cloudflare-workers": "^1.7.4",
+    "@remix-run/react": "^1.7.4",
+    "@unocss/reset": "^0.46.1",
+    "cross-env": "^7.0.3",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-flip-toolkit": "^7.0.17",
+    "react-icons": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^3.14.1",
+    "@remix-run/dev": "^1.7.4",
+    "@remix-run/eslint-config": "^1.7.4",
+    "@trivago/prettier-plugin-sort-imports": "^3.4.0",
+    "@types/react": "^17.0.47",
+    "@types/react-dom": "^17.0.17",
+    "@unocss/preset-web-fonts": "^0.46.3",
+    "eslint": "^8.23.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "miniflare": "^2.6.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.7.1",
+    "typescript": "^4.7.4",
+    "unocss": "^0.46.1",
+    "wrangler": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=16.13"
+  }
+}
