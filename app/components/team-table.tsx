@@ -1,7 +1,4 @@
-export interface Team {
-  id: string;
-  alias?: string;
-}
+import type { Team } from "~/processing";
 
 export interface TeamTableProps {
   teams: Team[];
