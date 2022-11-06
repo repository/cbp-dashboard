@@ -40,21 +40,17 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, data }) => {
 
             const rtl = dashboardContext.runtimeLog[team.id]?.[key];
 
-            let stopped = false;
-            if (
+            const stopped =
               rtl &&
               data?.updated &&
               rtl.runtime === runtime &&
-              differenceInMinutes(new Date(data.updated), new Date(rtl.since)) > 1
-            ) {
-              stopped = true;
-            }
+              differenceInMinutes(new Date(data.updated), new Date(rtl.since)) > 1;
 
             return (
               <Fragment key={key}>
                 <div className="min-w-12 text-center flex flex-col">
                   <Alternate
-                    className={"text-xs " + (stopped ? "bg-gray-400 text-white" : "")}
+                    className={"text-sm " + (stopped ? "bg-gray-400 text-white" : "")}
                     on={
                       runtime < 350
                         ? "bg-yellow-400 !text-gray-900"

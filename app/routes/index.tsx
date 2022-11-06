@@ -1,5 +1,6 @@
 import { Link } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
 import TeamTable from "~/components/team-table";
 import TextInput from "~/components/text-input";
 import type { Team } from "~/processing";
@@ -11,7 +12,7 @@ const Index: React.FC = () => {
   const [teamIdError, setTeamIdError] = useState("");
   const [teamAliasError, setTeamAliasError] = useState("");
 
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useLocalStorage<Team[]>("teams", []);
 
   const addTeam: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -40,17 +41,6 @@ const Index: React.FC = () => {
   const deleteTeam = (team: Team) => {
     setTeams((teams) => teams.filter((t) => t.id !== team.id));
   };
-
-  useEffect(() => {
-    const lsTeams = JSON.parse(localStorage.getItem("teams") ?? "[]");
-    if (Array.isArray(lsTeams) && lsTeams.length > 0) {
-      setTeams(lsTeams);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("teams", JSON.stringify(teams));
-  }, [teams]);
 
   return (
     <div className="h-screen max-w-screen-lg mx-auto pt-2">

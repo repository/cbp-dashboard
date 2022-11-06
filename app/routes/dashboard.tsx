@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import { Flipped, Flipper } from "react-flip-toolkit";
+import { useEffectOnce, useInterval, useLocalStorage, useUpdateEffect } from "usehooks-ts";
 import TeamCard from "~/components/team-card";
 import { getTotalScore } from "~/processing";
 import type { TeamInfoResponse, RuntimeLog, Team } from "~/processing";
@@ -13,69 +14,55 @@ export const DashboardContext = createContext<DashboardContextValue>({
 });
 
 const Dashboard: React.FC = () => {
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [teams] = useLocalStorage<Team[]>("teams", []);
+  const [runtimeLog, setRuntimeLog] = useLocalStorage<RuntimeLog>("runtimeLog", {});
   const [teamsData, setTeamsData] = useState<TeamInfoResponse>({});
-  const [runtimeLog, setRuntimeLog] = useState<RuntimeLog>({});
 
-  useEffect(() => {
-    const lsTeams = JSON.parse(localStorage.getItem("teams") ?? "[]");
-    if (Array.isArray(lsTeams) && lsTeams.length > 0) {
-      setTeams(lsTeams);
-    }
+  const getData = async () => {
+    if (teams.length === 0) return;
 
-    const lsRuntimeLog = JSON.parse(localStorage.getItem("runtimeLog") ?? "{}");
-    if (typeof lsRuntimeLog === "object") {
-      setRuntimeLog(lsRuntimeLog);
-    }
-  }, []);
+    const res = await fetch(
+      "https://cyberpatriot-scoreboard.xcvr48.workers.dev/info?teams=" + teams.map((t) => t.id).join(","),
+    );
 
-  useEffect(() => {
-    const getData = async () => {
-      if (teams.length === 0) return;
+    if (!res.ok) return;
 
-      const res = await fetch(
-        "https://cyberpatriot-scoreboard.xcvr48.workers.dev/info?teams=" + teams.map((t) => t.id).join(","),
-      );
+    const data = await res.json<TeamInfoResponse>();
 
-      if (!res.ok) return;
+    if (!data) return;
 
-      const data = await res.json<TeamInfoResponse>();
+    setTeamsData(data);
+  };
 
-      if (!data) return;
+  useEffectOnce(() => {
+    getData();
+  });
+  useInterval(getData, 10 * 1000);
 
-      Object.entries(data).forEach(([teamId, teamData]) => {
+  useUpdateEffect(() => {
+    setRuntimeLog((rtl) => {
+      Object.entries(teamsData).forEach(([teamId, teamData]) => {
         if (!teamData) return;
 
         const time = new Date(teamData.updated);
 
-        setRuntimeLog((rtl) => {
-          const teamRtl = { ...rtl[teamId] };
+        if (!rtl[teamId]) {
+          rtl[teamId] = {};
+        }
 
-          teamData.images.forEach((image) => {
-            if (teamRtl[image.name]?.runtime !== image.runtime) {
-              teamRtl[image.name] = {
-                runtime: image.runtime,
-                since: time,
-              };
-            }
-          });
-
-          return { ...rtl, [teamId]: teamRtl };
+        teamData.images.forEach((image) => {
+          if (rtl[teamId][image.name]?.runtime !== image.runtime) {
+            rtl[teamId][image.name] = {
+              runtime: image.runtime,
+              since: time,
+            };
+          }
         });
       });
 
-      setTeamsData(data);
-    };
-
-    getData();
-    const interval = setInterval(getData, 10 * 1000);
-
-    return () => clearInterval(interval);
-  }, [teams]);
-
-  useEffect(() => {
-    localStorage.setItem("runtimeLog", JSON.stringify(runtimeLog));
-  }, [runtimeLog]);
+      return { ...rtl };
+    });
+  }, [teamsData, setRuntimeLog]);
 
   const [sorted, setSorted] = useState<[Team, TeamInfoResponse[string]][]>([]);
 

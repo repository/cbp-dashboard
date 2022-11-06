@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useInterval, useToggle } from "usehooks-ts";
 
 interface AlternateProps {
   className?: string;
@@ -9,18 +9,13 @@ interface AlternateProps {
 }
 
 const Alternate: React.FC<AlternateProps> = (props) => {
-  const [state, setState] = useState(false);
-  useEffect(() => {
-    if (props.active) {
-      const interval = setInterval(() => setState((s) => !s), props.delay);
-      return () => clearInterval(interval);
-    } else {
-      setState(false);
-    }
-  }, [props.active, props.delay]);
+  const [state, toggle] = useToggle(false);
+  useInterval(toggle, props.delay ?? null);
 
   return (
-    <div className={(props.className ?? "") + " " + (state ? props.on ?? "" : props.off ?? "")}>{props.children}</div>
+    <div className={(props.className ?? "") + " " + (props.active ? (state ? props.on ?? "" : props.off ?? "") : "")}>
+      {props.children}
+    </div>
   );
 };
 
