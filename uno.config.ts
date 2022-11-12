@@ -11,4 +11,8 @@ export default defineConfig({
       },
     }),
   ],
+  shortcuts: {
+    "skeleton-nr": "bg-slate-200 animate-pulse",
+    skeleton: "skeleton-nr rounded-md",
+  },
 });

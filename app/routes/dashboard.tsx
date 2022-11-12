@@ -1,9 +1,10 @@
 import { createContext, useEffect, useState } from "react";
-import { Flipped, Flipper } from "react-flip-toolkit";
-import { useEffectOnce, useInterval, useLocalStorage, useUpdateEffect } from "usehooks-ts";
-import TeamCard from "~/components/team-card";
-import { getTotalScore } from "~/processing";
-import type { TeamInfoResponse, RuntimeLog, Team } from "~/processing";
+import superjson from "superjson";
+import { useUpdateEffect } from "usehooks-ts";
+import BigScreen from "~/components/big-screen";
+import Leaderboard from "~/components/leaderboard";
+import type { RuntimeLog, TeamInfoResponse } from "~/processing";
+import { useLSRuntimeLog, useLSTeams } from "~/utils/local-storage";
 
 interface DashboardContextValue {
   runtimeLog: RuntimeLog;
@@ -14,30 +15,30 @@ export const DashboardContext = createContext<DashboardContextValue>({
 });
 
 const Dashboard: React.FC = () => {
-  const [teams] = useLocalStorage<Team[]>("teams", []);
-  const [runtimeLog, setRuntimeLog] = useLocalStorage<RuntimeLog>("runtimeLog", {});
+  const [teams] = useLSTeams();
+  const [runtimeLog, setRuntimeLog] = useLSRuntimeLog();
   const [teamsData, setTeamsData] = useState<TeamInfoResponse>({});
 
-  const getData = async () => {
-    if (teams.length === 0) return;
+  useEffect(() => {
+    const getData = async () => {
+      if (teams.length === 0) return;
 
-    const res = await fetch(
-      "https://cyberpatriot-scoreboard.xcvr48.workers.dev/info?teams=" + teams.map((t) => t.id).join(","),
-    );
+      const res = await fetch("https://cbp-data.ngo.sh/info?teams=" + teams.map((t) => t.id).join(","));
 
-    if (!res.ok) return;
+      if (!res.ok) return;
 
-    const data = await res.json<TeamInfoResponse>();
+      const data = superjson.parse<TeamInfoResponse>(await res.text());
 
-    if (!data) return;
+      if (!data) return;
 
-    setTeamsData(data);
-  };
+      setTeamsData(data);
+    };
 
-  useEffectOnce(() => {
     getData();
-  });
-  useInterval(getData, 10 * 1000);
+
+    const interval = setInterval(getData, 30 * 1000);
+    return () => clearInterval(interval);
+  }, [teams]);
 
   useUpdateEffect(() => {
     setRuntimeLog((rtl) => {
@@ -51,8 +52,8 @@ const Dashboard: React.FC = () => {
         }
 
         teamData.images.forEach((image) => {
-          if (rtl[teamId][image.name]?.runtime !== image.runtime) {
-            rtl[teamId][image.name] = {
+          if (image.os !== null && rtl[teamId][image.os]?.runtime !== image.runtime) {
+            rtl[teamId][image.os] = {
               runtime: image.runtime,
               since: time,
             };
@@ -64,37 +65,13 @@ const Dashboard: React.FC = () => {
     });
   }, [teamsData, setRuntimeLog]);
 
-  const [sorted, setSorted] = useState<[Team, TeamInfoResponse[string]][]>([]);
-
-  useEffect(() => {
-    const tuples = Object.entries(teamsData).map(([id, data]) => {
-      const team = teams.find((t) => t.id === id);
-      return [team, data] as [Team, TeamInfoResponse[string]];
-    });
-
-    const withScores = tuples.map((t) => [t, getTotalScore(t[1]) ?? -1] as const);
-
-    withScores.sort(([, s1], [, s2]) => s2 - s1);
-
-    setSorted(withScores.map(([t]) => t));
-  }, [teams, teamsData]);
-
   return (
     <DashboardContext.Provider value={{ runtimeLog }}>
-      <div className="flex h-screen justify-center items-center flex-col">
-        <Flipper flipKey={sorted.map(([team]) => team.id).join("")}>
-          <ul>
-            {sorted.map(([team, data]) => {
-              return (
-                <Flipped key={team.id} flipId={team.id}>
-                  <li>
-                    <TeamCard team={team} data={data} />
-                  </li>
-                </Flipped>
-              );
-            })}
-          </ul>
-        </Flipper>
+      <div className="flex h-screen p-4">
+        <div className="w-96 flex-shrink-0">
+          <Leaderboard teams={teams} teamsData={teamsData} />
+        </div>
+        <BigScreen teams={teams} teamsData={teamsData} />
       </div>
     </DashboardContext.Provider>
   );

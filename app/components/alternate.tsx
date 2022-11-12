@@ -6,6 +6,7 @@ interface AlternateProps {
   off?: string;
   delay?: number;
   active?: boolean;
+  children?: React.ReactNode;
 }
 
 const Alternate: React.FC<AlternateProps> = (props) => {

@@ -1,9 +1,9 @@
 import { Link } from "@remix-run/react";
 import { useState } from "react";
-import { useLocalStorage } from "usehooks-ts";
 import TeamTable from "~/components/team-table";
 import TextInput from "~/components/text-input";
 import type { Team } from "~/processing";
+import { useLSTeams } from "~/utils/local-storage";
 
 const Index: React.FC = () => {
   const [teamToAddId, setTeamToAddId] = useState("");
@@ -12,7 +12,7 @@ const Index: React.FC = () => {
   const [teamIdError, setTeamIdError] = useState("");
   const [teamAliasError, setTeamAliasError] = useState("");
 
-  const [teams, setTeams] = useLocalStorage<Team[]>("teams", []);
+  const [teams, setTeams] = useLSTeams();
 
   const addTeam: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
