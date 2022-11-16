@@ -2,8 +2,8 @@ import { Link } from "@remix-run/react";
 import { useState } from "react";
 import TeamTable from "~/components/team-table";
 import TextInput from "~/components/text-input";
-import type { Team } from "~/processing";
 import { useLSTeams } from "~/utils/local-storage";
+import type { Team } from "~/utils/processing";
 
 const Index: React.FC = () => {
   const [teamToAddId, setTeamToAddId] = useState("");

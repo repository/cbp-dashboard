@@ -1,4 +1,4 @@
-import type { Team } from "~/processing";
+import type { Team } from "~/utils/processing";
 
 export interface TeamTableProps {
   teams: Team[];

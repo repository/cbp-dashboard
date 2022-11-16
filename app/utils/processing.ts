@@ -1,3 +1,5 @@
+import { differenceInMinutes } from "date-fns";
+
 export interface Team {
   id: string;
   alias?: string;
@@ -5,7 +7,7 @@ export interface Team {
 
 export interface HistoryElement {
   time: Date;
-  images: Record<string, number>;
+  images: Record<OS, number | null>;
 }
 
 export enum Tier {
@@ -70,7 +72,7 @@ export interface RuntimeLog {
 }
 
 export function getPercentile(ranking: Ranking) {
-  return Math.round((ranking.place / ranking.total) * 100);
+  return Math.floor((100 * (ranking.total - ranking.place)) / ranking.total);
 }
 
 export function formatPercentile(ranking: Ranking) {
@@ -84,3 +86,37 @@ export function getOrdinal(n: number) {
   const v = n % 100;
   return s[(v - 20) % 10] || s[v] || s[0];
 }
+
+export function prepareHistory(history: HistoryElement[]) {
+  if (history.length === 0) {
+    return [];
+  }
+
+  const newHistory = history.map((h) => ({ time: h.time.getTime(), ...h.images }));
+
+  // while (differenceInMinutes(newHistory[Math.max(newHistory.length - 1, 0)].time, newHistory[0].time) < 360) {
+  //   newHistory.push({
+  //     time: addMinutes(newHistory[newHistory.length - 1].time, 5).getTime(),
+  //     Windows: null,
+  //     Server: null,
+  //     Linux: null,
+  //   });
+  // }
+
+  return newHistory;
+}
+
+export function isStopped(data: TeamInfoResponse[string], teamRtl: RuntimeLog[string], image: Image | null) {
+  const imageRtl = image?.os && teamRtl ? teamRtl[image.os] : undefined;
+
+  return (
+    (imageRtl &&
+      image &&
+      data?.updated &&
+      imageRtl.runtime === image?.runtime &&
+      differenceInMinutes(data.updated, imageRtl.since) > 1) ??
+    false
+  );
+}
+
+export const imageDisplayOrder = [OS.Windows, OS.Server, OS.Linux];

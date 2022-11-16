@@ -1,9 +1,11 @@
-name = "cbp-dashboard"
+name = "cbp"
 
-workers_dev = true
 main = "./build/index.js"
 # https://developers.cloudflare.com/workers/platform/compatibility-dates
 compatibility_date = "2022-04-05"
+
+workers_dev = false
+route = { pattern = "cbp.ngo.sh", custom_domain = true }
 
 [site]
   bucket = "./public"

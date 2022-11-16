@@ -1,23 +1,24 @@
 import { createContext, useEffect, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import superjson from "superjson";
 import { useUpdateEffect } from "usehooks-ts";
 import BigScreen from "~/components/big-screen";
 import Leaderboard from "~/components/leaderboard";
-import type { RuntimeLog, TeamInfoResponse } from "~/processing";
 import { useLSRuntimeLog, useLSTeams } from "~/utils/local-storage";
+import type { RuntimeLog, TeamInfoResponse } from "~/utils/processing";
 
-interface DashboardContextValue {
-  runtimeLog: RuntimeLog;
-}
-
-export const DashboardContext = createContext<DashboardContextValue>({
-  runtimeLog: {},
+export const DashboardContext = createContext({
+  hideTeamNumbers: false,
+  runtimeLog: {} as RuntimeLog,
 });
 
 const Dashboard: React.FC = () => {
   const [teams] = useLSTeams();
   const [runtimeLog, setRuntimeLog] = useLSRuntimeLog();
   const [teamsData, setTeamsData] = useState<TeamInfoResponse>({});
+  const [hideTeamNumbers, setHideTeamNumbers] = useState(false);
+
+  useHotkeys("h", () => setHideTeamNumbers((hideTeamNumbers) => !hideTeamNumbers));
 
   useEffect(() => {
     const getData = async () => {
@@ -66,9 +67,9 @@ const Dashboard: React.FC = () => {
   }, [teamsData, setRuntimeLog]);
 
   return (
-    <DashboardContext.Provider value={{ runtimeLog }}>
+    <DashboardContext.Provider value={{ runtimeLog, hideTeamNumbers }}>
       <div className="flex h-screen p-4">
-        <div className="w-96 flex-shrink-0">
+        <div className="w-96 flex-shrink-0 overflow-y-auto scrollbar scrollbar-rounded scrollbar-w-2 scrollbar-track-color-gray-100 scrollbar-thumb-color-gray-300 pr-2">
           <Leaderboard teams={teams} teamsData={teamsData} />
         </div>
         <BigScreen teams={teams} teamsData={teamsData} />

@@ -1,7 +1,7 @@
 import { animate, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useEffectOnce } from "usehooks-ts";
-import { getOrdinal } from "~/processing";
+import { getOrdinal } from "~/utils/processing";
 import usePrevious from "~/utils/use-previous";
 
 interface AnimatedNumberProps {
